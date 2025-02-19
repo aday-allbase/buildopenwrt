@@ -68,7 +68,6 @@ configure_amlogic_permissions() {
     if [ "$TYPE" == "AMLOGIC" ]; then
         log "Setting up Amlogic file permissions"
             sed -i "/# setup misc settings/ a\chmod +x $file" files/etc/uci-defaults/99-init-settings.sh
-        done
     else
         log "Removing lib directory for non-Amlogic build"
     fi
