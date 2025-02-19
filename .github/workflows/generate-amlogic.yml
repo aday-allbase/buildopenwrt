@@ -1,4 +1,4 @@
-name: Generate RTA-WRT Amlogic Firmware
+name: Generate Amlogic Firmware
 
 on:
   workflow_dispatch:
