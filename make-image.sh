@@ -84,7 +84,7 @@ handle_tunnel_option() {
             ;;
 #        "openclash-passwall")
 #            PACKAGES+=" $OPENCLASH $PASSWALL"
-            ;;
+#            ;;
 #        "nikki-passwall")
 #            PACKAGES+=" $NIKKI $PASSWALL"
 #            ;;
