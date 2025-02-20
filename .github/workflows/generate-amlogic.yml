@@ -83,9 +83,7 @@ jobs:
 
   build-firmware:
     name: Build ${{ inputs.target }}-${{ inputs.release_branch }}-${{ inputs.tunnel }}
-    needs: check-compatibility
-    if: needs.check-compatibility.outputs.status == 'success'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Initialization environment
