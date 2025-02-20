@@ -1,4 +1,4 @@
-name: Generate Amlogic Firmware
+name: Generate Amlogic
 
 on:
   workflow_dispatch:
