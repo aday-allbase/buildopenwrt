@@ -290,16 +290,6 @@ jobs:
           echo "Images packaged successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Mod SDCard
-        id: modsdcard
-        if: steps.package.outputs.status == 'success'
-        run: |
-          cd ${{ env.WORKING_DIR }}
-
-          chmod +x scripts/MODSDCARD.sh
-          ./scripts/MODSDCARD.sh
-          echo "status=success" >> $GITHUB_OUTPUT
-
       - name: Create Release
         if: steps.modsdcard.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
