@@ -83,7 +83,9 @@ jobs:
 
   build-firmware:
     name: Build ${{ inputs.target }}-${{ inputs.release_branch }}-${{ inputs.tunnel }}
-    runs-on: ubuntu-latest
+    needs: check-compatibility
+    if: needs.check-compatibility.outputs.status == 'success'
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Initialization environment
@@ -270,9 +272,9 @@ jobs:
                 sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
                 
                 cd ${{ env.PACKAGED_OUTPUTPATH }}
-                for file in *.img.zst; do
-                  new_name="RTA-WRT_$(basename "$file" .img.gz)_${tunnel}.img.gz"
-                  mv "$file" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$new_name"
+                for img in *.img.gz; do
+                  new_name="RTA-WRT_$(basename "$img" .img.gz)_${tunnel}.img.gz"
+                  mv "$img" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$new_name"
                 done
                 cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
               fi
