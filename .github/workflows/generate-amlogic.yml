@@ -312,9 +312,9 @@ jobs:
                 sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
                 
                 cd ${{ env.PACKAGED_OUTPUTPATH }}
-                for file img in *.img.gz; do
-                  new_name="RTA-WRT_$(basename "$img" .img.gz)_${tunnel}.img.gz"
-                  mv "$img" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$new_name"
+                for file in *.img.gz; do
+                  new_name="RTA-WRT_$(basename "$file" .img.gz)_${tunnel}.img.gz"
+                  mv "$file" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$new_name"
                 done
                 cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
               fi
