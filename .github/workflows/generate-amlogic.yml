@@ -274,7 +274,7 @@ jobs:
 #                cd ${{ env.PACKAGED_OUTPUTPATH }}
 #                for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz;
                 cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
-#              fi
+              fi
 #            done
             
             sudo rm -rf amlogic-s9xxx-openwrt
