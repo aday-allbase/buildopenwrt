@@ -19,9 +19,10 @@ declare -a openclash_ipk=("luci-app-openclash|https://downloads.immortalwrt.org/
 
 # Function to download and setup OpenClash
 setup_openclash() {
-    mkdir -p "${custom_files_path}/etc/openclash/core"
-    ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
-    gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+    echo "Downloading OpenClash packages"
+    download_packages "custom" openclash_ipk[@]
+    ariadl "${clash_meta}" "file/etc/openclash/core/clash_meta.gz"
+    gzip -d "file/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
 }
 
 # Function to download and setup Nikki
