@@ -1,4 +1,4 @@
-name: Generate Amlogic
+name: Generate Amlogic Firmware
 
 on:
   workflow_dispatch:
@@ -250,45 +250,6 @@ jobs:
 
           echo "Images built successfully:"
           ls -la compiled_images/
-          echo "status=success" >> $GITHUB_OUTPUT
-
-      - name: Package Amlogic Images
-        id: package
-        if: steps.build.outputs.status == 'success'
-        run: |
-          cd ${{ env.WORKING_DIR }}
-
-          package_image() {
-            local tunnel=$1
-            echo "Packaging images for: $tunnel"
-            
-            git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
-            mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
-            
-            for file in compiled_images/*_${tunnel}.tar.gz; do
-              if [ -f "$file" ]; then
-                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/RTA-WRT_openwrt-armsr-armv8-generic-rootfs.tar.gz
-                cd amlogic-s9xxx-openwrt
-                sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
-                
-#                cd ${{ env.PACKAGED_OUTPUTPATH }}
-#                for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz;
-                cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
-              fi
-#            done
-            
-            sudo rm -rf amlogic-s9xxx-openwrt
-          }
-
-          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
-            for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
-              package_image $tunnel
-            done
-          else
-            package_image ${{ env.TUNNEL }}
-          fi
-
-          echo "Images packaged successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Mod SDCard
