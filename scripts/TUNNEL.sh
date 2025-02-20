@@ -2,13 +2,13 @@
 
 . ./scripts/INCLUDE.sh
 
-# openclash_core URL generation
-if [[ "$ARCH_3" == "x86_64" ]]; then
-    meta_file="mihomo-linux-${ARCH_1}-compatible"
-else
-    meta_file="mihomo-linux-${ARCH_1}"
-fi
-openclash_core=$(curl -s "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+    # Core Mihomo
+    echo -e "${STEPS} Start Clash Core Download !"
+    if [[ "$ARCH_3" == "x86_64" ]]; then
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+    else
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+    fi
 
 # Nikki URL generation
 nikki_file_ipk="nikki_${ARCH_3}-openwrt-${CURVER}"
@@ -19,10 +19,9 @@ declare -a openclash_ipk=("luci-app-openclash|https://downloads.immortalwrt.org/
 
 # Function to download and setup OpenClash
 setup_openclash() {
-    echo "Downloading OpenClash packages"
-    download_packages "custom" openclash_ipk[@]
-    ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
-    gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+    mkdir -p "${custom_files_path}/etc/openclash/core"
+    ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
+    gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
 }
 
 # Function to download and setup Nikki
