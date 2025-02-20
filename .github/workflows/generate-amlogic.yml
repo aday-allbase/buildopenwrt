@@ -251,6 +251,52 @@ jobs:
           echo "Images built successfully:"
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
+          
+          - name: Package Amlogic Images
+            id: package
+            if: steps.build.outputs.status == 'success'
+            run: |
+            cd ${{ env.WORKING_DIR }}
+
+            package_image() {
+            local tunnel=$1
+            echo "Packaging images for: $tunnel"
+            
+            git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
+            mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
+            
+            for file in compiled_images/*_${tunnel}.tar.gz; do
+              if [ -f "$file" ]; then
+                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/RTA-WRT_openwrt-armsr-armv8-generic-rootfs.tar.gz
+                cd amlogic-s9xxx-openwrt
+                sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
+                
+                # Cari file output dan pindahkan
+                find ./openwrt/out/ -name "*.img.gz" | while read FILE_PATH; do
+                  if [ -n "$FILE_PATH" ]; then
+                    NEW_NAME="RTA-WRT_$(basename "$FILE_PATH" .img.gz)_${tunnel}.img.gz"
+                    sudo mv "$FILE_PATH" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$NEW_NAME"
+                  fi
+                done
+                
+                # Kembali ke directory awal
+                cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
+              fi
+            done
+            
+            sudo rm -rf amlogic-s9xxx-openwrt
+          }
+
+          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
+            for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
+              package_image $tunnel
+            done
+          else
+            package_image ${{ env.TUNNEL }}
+          fi
+
+          echo "Images packaged successfully"
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Mod SDCard
         id: modsdcard
