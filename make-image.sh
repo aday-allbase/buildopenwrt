@@ -45,11 +45,13 @@ luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin
 luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp \
 luci-theme-bootstrap px5g-wolfssl rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci \
 rpcd-mod-rrdns uhttpd uhttpd-mod-ubus coreutils coreutils-base64 coreutils-nohup coreutils-stty libc coreutils-stat \
-ip-full libuci-lua ipset iptables iptables-legacy \
+ip-full libuci-lua microsocks resolveip ipset iptables iptables-legacy \
 iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat luci-lua-runtime zoneinfo-asia zoneinfo-core \
 perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
 perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix \
-perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader"
+perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader \
+libcap libcap-bin ruby ruby-yaml kmod-inet-diag kmod-nft-tproxy \
+chinadns-ng dns2socks dns2tcp ipt2socks tcping xray-core xray-plugin"
 
 # Modem and UsbLAN Driver
 PACKAGES+=" kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
@@ -62,13 +64,13 @@ kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-uti
 kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 libusb-1.0-0"
 
 # Modem Tools
-#PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
-#PACKAGES+=" atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
+PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
+PACKAGES+=" atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
 
 # Tunnel option
 OPENCLASH+="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
 NIKKI+="nikki luci-app-nikki"
-#PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
+PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
 
 # Tunnel options handling
 handle_tunnel_option() {
@@ -76,51 +78,46 @@ handle_tunnel_option() {
         "openclash")
             PACKAGES+=" $OPENCLASH"
             ;;
-#        "passwall")
-#            PACKAGES+=" $PASSWALL"
-#            ;;
+        "passwall")
+            PACKAGES+=" $PASSWALL"
+            ;;
         "nikki")
             PACKAGES+=" $NIKKI"
             ;;
-#        "openclash-passwall")
-#            PACKAGES+=" $OPENCLASH $PASSWALL"
-#            ;;
-#        "nikki-passwall")
-#            PACKAGES+=" $NIKKI $PASSWALL"
-#            ;;
+        "openclash-passwall")
+            PACKAGES+=" $OPENCLASH $PASSWALL"
+            ;;
+        "nikki-passwall")
+            PACKAGES+=" $NIKKI $PASSWALL"
+            ;;
         "nikki-openclash")
             PACKAGES+=" $NIKKI $OPENCLASH"
             ;;
-#        "openclash-passwall-nikki")
-#            PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
-#            ;;
+        "openclash-passwall-nikki")
+            PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
+            ;;
     esac
 }
 
-# Remote Services
-#PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
-
 # NAS and Hard disk tools
-PACKAGES+=" luci-app-diskman kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
+PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
 
 # Bandwidth And Network Monitoring
-#PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
 # Theme
-#PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 PACKAGES+=" luci-theme-material"
 
 # PHP8
 PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
 
 # More
-#PACKAGES+=" luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
+PACKAGES+=" luci-app-ramfree"
 
 # Handle profile-specific packages
 handle_profile_packages() {
     if [ "$1" == "rpi-4" ]; then
-        PACKAGES+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
+        PACKAGES+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
     elif [ "$ARCH_2" == "x86_64" ]; then
         PACKAGES+=" kmod-iwlwifi iw-full pciutils"
     fi

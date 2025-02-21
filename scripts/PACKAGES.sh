@@ -1,89 +1,143 @@
 #!/bin/bash
 
 # Source the include file containing common functions and variables
+if [[ ! -f "./scripts/INCLUDE.sh" ]]; then
+    log "ERROR" "INCLUDE.sh not found in ./scripts/"
+    exit 1
+fi
+
 . ./scripts/INCLUDE.sh
 
 # Initialize package arrays based on target type
-declare -a github_packages
+declare -a packages_github
 if [ "$TYPE" == "AMLOGIC" ]; then
-    echo -e "${INFO} Adding Amlogic-specific packages..."
-    github_packages+=(
-        "luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
+    log "INFO" "Adding Amlogic-specific packages..."
+    packages_github=(
+        "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
     )
 fi
 
-# Download GitHub packages
-echo -e "${INFO} Downloading GitHub packages..."
-download_packages "github" github_packages[@]
-
-# Define package repositories
-KIDDIN9_REPO="https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-GSPOTX2F_REPO="https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
-
-# Define package categories
-declare -A package_categories=(
-    ["openwrt"]="
-        modemmanager-rpcd|https://downloads.openwrt.org/releases/packages-24.10/$ARCH_3/packages
-        luci-proto-modemmanager|https://downloads.openwrt.org/releases/packages-24.10/$ARCH_3/luci
-        libqmi|https://downloads.openwrt.org/releases/packages-24.10/$ARCH_3/packages
-        libmbim|https://downloads.openwrt.org/releases/packages-24.10/$ARCH_3/packages
-        modemmanager|https://downloads.openwrt.org/releases/packages-24.10/$ARCH_3/packages
-    "
-    ["kiddin9"]="
-        luci-app-diskman|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
-        xmm-modem|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
-    "
-    ["immortalwrt"]="
-        luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci
-    "
-    ["gSpotx2f"]="
-        luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current
-        internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current
-        internet-detector-mod-modem-restart|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current
-        luci-app-cpu-status-mini|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current
-        luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current
-    "
-    ["etc"]="
-        luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current
-    "
+# Define repositories with proper quoting
+declare -A REPOS
+REPOS=(
+    ["KIDDIN9"]="https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+    ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3"
+    ["OPENWRT"]="https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3"
+    ["GSPOTX2F"]="https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
+    ["FANTASTIC"]="https://fantastic-packages.github.io/packages/releases/$VEROP/packages/x86_64"
 )
 
-# Process and download packages by category
-declare -a all_packages
-for category in "${!package_categories[@]}"; do
-    echo -e "${INFO} Processing $category packages..."
-    while read -r package_line; do
-        [[ -z "$package_line" ]] && continue
-        all_packages+=("$package_line")
-    done <<< "${package_categories[$category]}"
-done
+# Define package categories with improved structure
+declare -a packages_custom=(
+    "modemmanager-rpcd|${REPOS[OPENWRT]}/packages"
+    "luci-proto-modemmanager|${REPOS[OPENWRT]}/luci"
+    "libqmi|${REPOS[OPENWRT]}/packages"
+    "libmbim|${REPOS[OPENWRT]}/packages"
+    "modemmanager|${REPOS[OPENWRT]}/packages"
+    "sms-tool|${REPOS[OPENWRT]}/packages"
+    
+    "luci-app-diskman|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-zte|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-gosun|${REPOS[KIDDIN9]}"
+    "modeminfo-qmi|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-yuge|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-thales|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-tw|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-meig|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-styx|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-mikrotik|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-dell|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-sierra|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-quectel|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-huawei|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-xmm|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-telit|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-fibocom|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-simcom|${REPOS[KIDDIN9]}"
+    "modeminfo|${REPOS[KIDDIN9]}"
+    "luci-app-modeminfo|${REPOS[KIDDIN9]}"
+    "atinout|${REPOS[KIDDIN9]}"
+    "xmm-modem|${REPOS[KIDDIN9]}"
+    "luci-app-lite-watchdog|${REPOS[KIDDIN9]}"
 
-# Download all packages
-echo -e "${INFO} Downloading custom packages..."
-download_packages "custom" all_packages[@]
+    "luci-app-ramfree|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-3ginfo-lite|${REPOS[IMMORTALWRT]}/luci"
+    "modemband|${REPOS[IMMORTALWRT]}/packages"
+    "luci-app-modemband|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-sms-tool-js|${REPOS[IMMORTALWRT]}/luci"
+    "dns2tcp|${REPOS[IMMORTALWRT]}/packages"
+    "luci-app-openclash|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-passwall|${REPOS[IMMORTALWRT]}/luci"
 
-# Verify downloads
-echo -e "${INFO} Verifying downloaded packages..."
+    "luci-app-internet-detector|${REPOS[GSPOTX2F]}"
+    "internet-detector|${REPOS[GSPOTX2F]}"
+    "internet-detector-mod-modem-restart|${REPOS[GSPOTX2F]}"
+    "luci-app-cpu-status-mini|${REPOS[GSPOTX2F]}"
+    "luci-app-temp-status|${REPOS[GSPOTX2F]}"
+)
+
+# Enhanced package verification function
 verify_packages() {
     local pkg_dir="packages"
-    local total_pkgs=$(find "$pkg_dir" -name "*.ipk" | wc -l)
-    echo -e "${INFO} Total packages downloaded: $total_pkgs"
+    local -a failed_packages=()
+    local -a package_list=("${!1}")  # Fixed parameter passing
     
-    # List any failed downloads
-    local failed=0
-    for pkg in "${all_packages[@]}"; do
-        local pkg_name="${pkg%%|*}"
-        if ! find "$pkg_dir" -name "${pkg_name}*.ipk" >/dev/null 2>&1; then
-            echo -e "${WARNING} Package not found: $pkg_name"
-            ((failed++))
+    if [[ ! -d "$pkg_dir" ]]; then
+        log "ERROR" "Package directory not found: $pkg_dir"
+        return 1
+    fi
+    
+    local total_found=$(find "$pkg_dir" \( -name "*.ipk" -o -name "*.apk" \) | wc -l)
+    log "INFO" "Found $total_found package files"
+    
+    for package in "${package_list[@]}"; do
+        local pkg_name="${package%%|*}"
+        if ! find "$pkg_dir" \( -name "${pkg_name}*.ipk" -o -name "${pkg_name}*.apk" \) -print -quit | grep -q .; then
+            failed_packages+=("$pkg_name")
         fi
     done
     
-    if [ $failed -eq 0 ]; then
-        echo -e "${SUCCESS} All packages downloaded successfully"
-    else
-        echo -e "${WARNING} $failed package(s) failed to download"
+    local failed=${#failed_packages[@]}
+    
+    if ((failed > 0)); then
+        log "WARNING" "$failed packages failed to download:"
+        printf '%s\n' "${failed_packages[@]}" | while read -r pkg; do
+            log "WARNING" "  - $pkg"
+        done
+        return 1
     fi
+    
+    log "SUCCESS" "All packages downloaded successfully"
+    return 0
 }
 
-verify_packages
+# Main execution
+main() {
+    local rc=0
+    
+    # Download GitHub packages
+    log "INFO" "Downloading GitHub packages..."
+    download_packages "github" packages_github[@] || rc=1
+    
+    # Download Custom packages
+    log "INFO" "Downloading Custom packages..."
+    download_packages "custom" packages_custom[@] || rc=1
+    
+    # Verify all downloads
+    log "INFO" "Verifying all packages..."
+    verify_packages packages_github[@] || rc=1
+    verify_packages packages_custom[@] || rc=1
+    
+    if [ $rc -eq 0 ]; then
+        log "SUCCESS" "Package download and verification completed successfully"
+    else
+        log "ERROR" "Package download or verification failed"
+    fi
+    
+    return $rc
+}
+
+# Run main function if script is not sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

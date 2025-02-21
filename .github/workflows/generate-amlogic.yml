@@ -58,7 +58,6 @@ on:
         type: boolean
 
 env:
-  TYPE: AMLOGIC
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
@@ -68,11 +67,15 @@ env:
   DEBIAN_FRONTEND: noninteractive
 
 jobs:
-  Generate:
-    runs-on: ubuntu-latest
+  check-compatibility:
+    name: Check Compatibility
+    runs-on: ubuntu-22.04
+    outputs:
+      status: ${{ steps.compatibility.outputs.status }}
 
     steps:
       - name: Check System Requirements
+        id: compatibility
         run: |
           echo "Checking system requirements..."
           echo "CPU Architecture: $(uname -m)"
@@ -83,18 +86,64 @@ jobs:
 
   build-firmware:
     name: Build ${{ inputs.release_branch }}-${{ inputs.tunnel }}
-    runs-on: ubuntu-latest
+    needs: check-compatibility
+    if: needs.check-compatibility.outputs.status == 'success'
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Initialization environment
+        id: init
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip qemu-utils mkisofs
+          TYPE="AMLOGIC"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
+          if [ "$TARGET" == "all" ]; then
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          fi
+          sudo -E apt-get -y update
+          if [ "$TARGET" == "all" ]; then
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          fi
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          if [ "$TARGET" == "all" ]; then
+          sudo -E systemctl daemon-reload
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          fi
+          sudo timedatectl set-timezone "${TZ}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
+
+      - name: Create simulated physical disk
+        if: github.event.inputs.target == 'all'
+        run: |
+          mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+          root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+          sudo truncate -s "${mnt_size}"G /mnt/mnt.img
+          sudo truncate -s "${root_size}"G /root.img
+          sudo losetup /dev/loop6 /mnt/mnt.img
+          sudo losetup /dev/loop7 /root.img
+          sudo pvcreate /dev/loop6
+          sudo pvcreate /dev/loop7
+          sudo vgcreate github /dev/loop6 /dev/loop7
+          sudo lvcreate -n runner -l 100%FREE github
+          sudo mkfs.xfs /dev/github/runner
+          sudo mkdir -p /builder
+          sudo mount /dev/github/runner /builder
+          sudo chown -R runner.runner /builder
+          df -Th
 
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           path: origin
+          fetch-depth: 1
 
       - name: Setup Build Variables
         id: variables
@@ -128,8 +177,8 @@ jobs:
           echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
 
           # Set date variables
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
+          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
+          echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
           echo "Build variables configured successfully"
@@ -289,14 +338,28 @@ jobs:
 
           echo "Images packaged successfully"
           echo "status=success" >> $GITHUB_OUTPUT
+          ls -la compiled_images/
+
+      - name: Mod SDCard
+        id: modsdcard
+        if: steps.package.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+
+          chmod +x scripts/MODSDCARD.sh
+          if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
+            ./scripts/MODSDCARD.sh
+          fi
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: github.event.inputs.release == 'true'
-        uses: softprops/action-gh-release@v2 
-        with:
+        if: steps.modsdcard.outputs.status == 'success'
+        uses: softprops/action-gh-release@v2
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
+        with:
+          tag_name: "rtawrt-amlogic-${{ env.BRANCH }}"
+          name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
-          asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
-          tag: release-${{ env.DATE }}
-          overwrite: true
+          prerelease: true
+          generate_release_notes: true
