@@ -355,11 +355,11 @@ jobs:
       - name: Create Release
         if: steps.modsdcard.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
-        env:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
         with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
           tag_name: "amlogic-${{ env.BRANCH }}"
           name: Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
-          prerelease: true
-          generate_release_notes: true
+          tag: release-${{ env.DATE }}
+          overwrite: true
