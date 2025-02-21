@@ -34,24 +34,22 @@ PROFILE=""
 PACKAGES=""
 
 # Base packages
-PACKAGES+=" -dnsmasq dnsmasq-full cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
-luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
-cpusage ttyd dmesg kmod-tun luci-lib-ipkg \
-zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl \
-tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server \
+PACKAGES+=" cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
+luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
+cpusage ttyd dmesg luci-lib-ipkg \
+zram-swap adb parted losetup resize2fs luci-ssl block-mount htop wget-ssl \
+tar unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server \
 liblucihttp liblucihttp-lua libubus-lua lua luci-app-firewall luci-app-opkg \
-ca-bundle ca-certificates luci-compat coreutils-sleep fontconfig coreutils-whoami file lolcat \
-luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
+ca-bundle coreutils-sleep fontconfig coreutils-whoami file lolcat \
+luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
 luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp \
 luci-theme-bootstrap px5g-wolfssl rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci \
-rpcd-mod-rrdns uhttpd uhttpd-mod-ubus coreutils coreutils-base64 coreutils-nohup coreutils-stty libc coreutils-stat \
-ip-full libuci-lua microsocks resolveip ipset iptables iptables-legacy \
+rpcd-mod-rrdns uhttpd uhttpd-mod-ubus coreutils coreutils-base64 coreutils-stty libc coreutils-stat \
+libuci-lua iptables iptables-legacy \
 iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat luci-lua-runtime zoneinfo-asia zoneinfo-core \
 perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
 perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix \
-perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader \
-libcap libcap-bin ruby ruby-yaml kmod-inet-diag kmod-nft-tproxy \
-chinadns-ng dns2socks dns2tcp ipt2socks tcping xray-core xray-plugin"
+perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader"
 
 # Modem and UsbLAN Driver
 PACKAGES+=" kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
@@ -100,7 +98,7 @@ handle_tunnel_option() {
 }
 
 # NAS and Hard disk tools
-PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
+PACKAGES+=" luci-app-diskman kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
 
 # Bandwidth And Network Monitoring
 PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart vnstat2 vnstati2 luci-app-vnstat2 netdata"
