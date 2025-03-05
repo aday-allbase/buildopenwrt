@@ -111,9 +111,6 @@ update_rootfs_size() {
         echo "# CONFIG_TARGET_ROOTFS_CPIOGZ is not set" >> "$config_file"
         echo "CONFIG_TARGET_ROOTFS_PARTSIZE=1024" >> "$config_file"
         
-        sed -i "s/Ouc3kNF6/${DATE}/g" files/etc/uci-defaults/99-init-settings.sh
-        sed -i '/# setup misc settings/ a\mv \/www\/luci-static\/resources\/view\/status\/include\/29_temp.js \/www\/luci-static\/resources\/view\/status\/include\/17_temp.js' files/etc/uci-defaults/99-init-settings.sh
-        
         echo "Rootfs configuration updated successfully:"
         echo "- Root partition size: 1024MB"
         echo "- Format: tar.gz (generic)"
