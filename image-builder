@@ -15,7 +15,7 @@ CONFIG_PACKAGE="config-package"
 setup_image_builder() {
     local version="$1"
     local new_name="openwrt-${version}"
-    local image_builder_name="openwrt-imagebuilder-${version}-armsr-armv8.Linux-x86_64.tar.xz"
+    local image_builder_name="openwrt-imagebuilder-${version}-armsr-armv8.Linux-x86_64.tar.zst"
     local download_url="https://downloads.openwrt.org/releases/${version}/targets/armsr/armv8"
     
     if [ ! -d "$new_name" ]; then
