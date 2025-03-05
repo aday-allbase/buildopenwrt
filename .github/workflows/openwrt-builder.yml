@@ -112,7 +112,7 @@ jobs:
       - name: Creating Package Artifact
         run: |
           mkdir -p ./artifact
-          cp -rf ./out/${{ inputs.devices }}/* ./artifact/
+          cp -rf ./ULO-Builder/out/${{ inputs.devices }}/* ./artifact/
           
       - name: Delivering Package
         uses: actions/upload-artifact@v4
