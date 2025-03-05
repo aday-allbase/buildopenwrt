@@ -1,0 +1,103 @@
+#!/bin/bash
+
+
+# Licensed under MIT License
+# See: https://opensource.org/license/mit
+#
+# Copyright (c) 2024 BobbyUnkown
+
+# Script to build firmware for ulo builder
+# BobbyUnkown https://github.com/bobbyunknown
+
+# Check if lolcat is installed
+if ! command -v lolcat &> /dev/null; then
+    echo "Installing lolcat..."
+    sudo apt-get install lolcat -y
+fi
+
+# Banner
+echo '    
+
+███████████████████████████████████████████████████████████
+█░░░░░░░░░░░░███░░░░░░░░░░░░░░███░░░░░░░░░░░░░░█░░░░░░░░░░█
+█░░▄▀▄▀▄▀▄▀░░░░█░░▄▀▄▀▄▀▄▀▄▀░░███░░▄▀▄▀▄▀▄▀▄▀░░█░░▄▀▄▀▄▀░░█
+█░░▄▀░░░░▄▀▄▀░░█░░▄▀░░░░░░▄▀░░███░░▄▀░░░░░░▄▀░░█░░░░▄▀░░░░█
+█░░▄▀░░██░░▄▀░░█░░▄▀░░██░░▄▀░░███░░▄▀░░██░░▄▀░░███░░▄▀░░███
+█░░▄▀░░██░░▄▀░░█░░▄▀░░░░░░▄▀░░░░█░░▄▀░░░░░░▄▀░░███░░▄▀░░███
+█░░▄▀░░██░░▄▀░░█░░▄▀▄▀▄▀▄▀▄▀▄▀░░█░░▄▀▄▀▄▀▄▀▄▀░░███░░▄▀░░███
+█░░▄▀░░██░░▄▀░░█░░▄▀░░░░░░░░▄▀░░█░░▄▀░░░░░░▄▀░░███░░▄▀░░███
+█░░▄▀░░██░░▄▀░░█░░▄▀░░████░░▄▀░░█░░▄▀░░██░░▄▀░░███░░▄▀░░███
+█░░▄▀░░░░▄▀▄▀░░█░░▄▀░░░░░░░░▄▀░░█░░▄▀░░██░░▄▀░░█░░░░▄▀░░░░█
+█░░▄▀▄▀▄▀▄▀░░░░█░░▄▀▄▀▄▀▄▀▄▀▄▀░░█░░▄▀░░██░░▄▀░░█░░▄▀▄▀▄▀░░█
+█░░░░░░░░░░░░███░░░░░░░░░░░░░░░░█░░░░░░██░░░░░░█░░░░░░░░░░█
+███████████████████████████████████████████████████████████
+
+' | lolcat -a -d 1
+
+echo -e "\nScript by BobbyUnknown" | lolcat -a -d 2
+echo "Github: https://github.com/bobbyunknown" | lolcat -a -d 2
+echo "=======================================" | lolcat -a -d 2
+
+while true; do
+    echo -e "\nSelect operation to perform:" | lolcat -a -d 2
+    echo "1. Set Device & Configuration" | lolcat -a -d 2
+    echo "2. Build Firmware" | lolcat -a -d 2
+    echo "3. Clear Configuration" | lolcat -a -d 2
+    echo "4. Exit" | lolcat -a -d 2
+    echo "=======================================" | lolcat -a -d 2
+
+    read -p "$(echo "Enter choice (1-4): " | lolcat -a -d 2)" choice
+
+    case $choice in
+        1)
+            echo "Running Set Device & Configuration..."
+            ./select-devices
+            if [ $? -eq 0 ]; then
+                echo "Configuration saved successfully" | lolcat -a
+            else
+                echo "Failed to save configuration" | lolcat -a
+                exit 1
+            fi
+            ;;
+        2)
+            if [ ! -f "config" ]; then
+                echo "Error: Config file not found" | lolcat -a
+                echo "Please run Set Device & Configuration first" | lolcat -a
+            else
+                echo "Starting firmware build process..." | lolcat -a
+                echo "Step 1: Building OpenWrt Image..." | lolcat -a
+                ./image-builder
+                
+                if [ $? -eq 0 ]; then
+                    echo "Step 2: Building ULO Firmware..." | lolcat -a
+                    ./ulobuilder
+                    if [ $? -eq 0 ]; then
+                        echo "Firmware build process completed" | lolcat -a
+                    else
+                        echo "Failed at ULO firmware build process" | lolcat -a
+                        exit 1
+                    fi
+                else
+                    echo "Failed at OpenWrt image build process" | lolcat -a
+                    exit 1
+                fi
+            fi
+            ;;
+        3)
+            if [ -f "config" ]; then
+                echo "Deleting configuration..." | lolcat -a
+                rm config
+                echo "Configuration deleted successfully" | lolcat -a
+            else
+                echo "Configuration file not found" | lolcat -a
+            fi
+            ;;
+        4)
+            echo "Exiting program" | lolcat -a
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice" | lolcat -a
+            ;;
+    esac
+done

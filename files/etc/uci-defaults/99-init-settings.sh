@@ -56,45 +56,6 @@ uci -q delete dhcp.lan.ra
 uci -q delete dhcp.lan.ndp
 uci commit dhcp
 
-# configure WLAN
-echo "Setup Wireless if available"
-uci set wireless.@wifi-device[0].disabled='0'
-uci set wireless.@wifi-iface[0].disabled='0'
-uci set wireless.@wifi-iface[0].encryption='none'
-uci set wireless.@wifi-device[0].country='ID'
-if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-  uci set wireless.@wifi-iface[0].ssid='OPEN-WRT_5g'
-  uci set wireless.@wifi-device[0].channel='149'
-  uci set wireless.radio0.htmode='HT40'
-  uci set wireless.radio0.band='5g'
-else
-  uci set wireless.@wifi-iface[0].ssid='OPEN-WRT_2g'
-  uci set wireless.@wifi-device[0].channel='1'
-  uci set wireless.@wifi-device[0].band='2g'
-fi
-uci commit wireless
-wifi reload && wifi up
-if iw dev | grep -q Interface; then
-  if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-    if ! grep -q "wifi up" /etc/rc.local; then
-      sed -i '/exit 0/i # remove if you dont use wireless' /etc/rc.local
-      sed -i '/exit 0/i sleep 10 && wifi up' /etc/rc.local
-    fi
-    if ! grep -q "wifi up" /etc/crontabs/root; then
-      echo "# remove if you dont use wireless" >> /etc/crontabs/root
-      echo "0 */12 * * * wifi down && sleep 5 && wifi up" >> /etc/crontabs/root
-      service cron restart
-    fi
-  fi
-else
-  echo "No wireless device detected."
-fi
-
-# custom repo and Disable opkg signature check
-echo "Setup custom repo using dlopenwrtai Repo"
-sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
-echo "src/gz custom_pkg https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
-
 # set material as default theme
 echo "Setup Default Theme"
 uci set luci.main.mediaurlbase='/luci-static/material' && uci commit
@@ -129,19 +90,17 @@ sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
 # setup misc settings
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/#&/' /etc/profile
-chmod +x /root/install2.sh && bash /root/install2.sh
-chmod +x /sbin/sync_time.sh
 chmod +x /sbin/free.sh
-chmod +x /usr/bin/clock
 chmod +x /usr/bin/openclash.sh
-chmod +x /usr/bin/cek_sms.sh
-chmod +x /usr/bin/speedtest
 
 # configurating openclash
 if opkg list-installed | grep luci-app-openclash > /dev/null; then
   echo "Openclash Detected!"
   echo "Configuring Core..."
   chmod +x /etc/openclash/core/clash_meta
+  chmod +x /etc/openclash/GeoIP.dat
+  chmod +x /etc/openclash/GeoSite.dat
+  chmod +x /etc/openclash/Country.mmdb
   chmod +x /usr/bin/patchoc.sh
   echo "Patching Openclash Overview"
   bash /usr/bin/patchoc.sh
@@ -158,15 +117,6 @@ else
   service internet-detector restart
   rm -rf /etc/config/openclash1
   rm -rf /etc/openclash
-fi
-
-# configurating Nikki
-if opkg list-installed | grep luci-app-nikki > /dev/null; then
-  echo "setup complete!"
-else
-  echo "No Nikki Detected."
-  rm -rf /etc/config/nikki
-  rm -rf /etc/nikki
 fi
 
 # Setup PHP

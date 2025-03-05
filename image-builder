@@ -1,0 +1,184 @@
+#!/bin/bash
+
+
+# Licensed under MIT License
+# See: https://opensource.org/license/mit
+#
+# Copyright (c) 2024 BobbyUnkown
+
+# Script to build firmware for ulo builder
+# BobbyUnkown https://github.com/bobbyunknown
+
+CONFIG_FILE="config"
+PACKAGE_DIR="package"
+CONFIG_PACKAGE="config-package"
+setup_image_builder() {
+    local version="$1"
+    local new_name="openwrt-${version}"
+    local image_builder_name="openwrt-imagebuilder-${version}-armsr-armv8.Linux-x86_64.tar.xz"
+    local download_url="https://downloads.openwrt.org/releases/${version}/targets/armsr/armv8"
+    
+    if [ ! -d "$new_name" ]; then
+        echo "Downloading OpenWRT Image Builder version ${version}..."
+        wget "${download_url}/${image_builder_name}" || {
+            echo "Failed to download Image Builder"
+            return 1
+        }
+        
+        echo "Extracting Image Builder..."
+        tar xf "$image_builder_name" || {
+            echo "Failed to extract Image Builder"
+            return 1
+        }
+        
+        mv "openwrt-imagebuilder-${version}-armsr-armv8.Linux-x86_64" "$new_name"
+        rm "$image_builder_name"
+    fi
+    return 0
+}
+
+build_image() {
+    local version="$1"
+    local new_name="openwrt-${version}"
+    
+    cd "$new_name" || {
+        echo "Failed to enter directory $new_name"
+        return 1
+    }
+
+    if [ -d "../package" ]; then
+        echo "Copying custom packages..."
+        cp -r "../package"/* packages/
+        
+        echo "Available custom packages:"
+        ls -1 packages/*.ipk 2>/dev/null
+    fi
+
+    if [ -d "../files" ]; then
+        cp -r "../files" ./
+        echo "Files copied successfully"
+    fi
+
+    if [ -f "../$CONFIG_PACKAGE" ]; then
+        local base_packages=$(sed ':a;N;$!ba;s/\\\n//g' "../$CONFIG_PACKAGE" | tr -s ' ')
+        
+        local custom_packages=""
+        if [ -d "packages" ] && [ "$(ls -A packages/*.ipk 2>/dev/null)" ]; then
+            custom_packages=$(ls packages/*.ipk | xargs -n1 basename | sed 's/_.*//' | tr '\n' ' ')
+            echo "Custom packages to be installed:"
+            echo "$custom_packages"
+        fi
+
+        local all_packages="$base_packages $custom_packages"
+        
+        echo "Starting image build with all packages:"
+        echo "$all_packages"
+
+        make image PROFILE="generic" PACKAGES="$all_packages" FILES="files"
+        
+        if [ $? -eq 0 ]; then
+            echo "Image build successful"
+        else
+            echo "Image build failed"
+            return 1
+        fi
+    else
+        echo "Error: File $CONFIG_PACKAGE not found"
+        return 1
+    fi
+
+    cd ..
+    return 0
+}
+
+update_rootfs_size() {
+    local version="$1"
+    local new_name="openwrt-${version}"
+    local config_file="$new_name/.config"
+
+    echo "Modifying root partition size and image configuration..."
+    if [ -f "$config_file" ]; then
+        cp "$config_file" "${config_file}.backup"
+        
+        sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=512/' "$config_file"
+        sed -i 's/CONFIG_TARGET_ROOTFS_SQUASHFS=.*/CONFIG_TARGET_ROOTFS_SQUASHFS=n/' "$config_file"
+        sed -i 's/CONFIG_TARGET_ROOTFS_EXT4FS=.*/CONFIG_TARGET_ROOTFS_EXT4FS=n/' "$config_file"
+        sed -i 's/CONFIG_TARGET_ROOTFS_CPIOGZ=.*/CONFIG_TARGET_ROOTFS_CPIOGZ=n/' "$config_file"
+        
+        echo "CONFIG_TARGET_ROOTFS_TARGZ=y" >> "$config_file"
+        echo "# CONFIG_TARGET_ROOTFS_SQUASHFS is not set" >> "$config_file"
+        echo "# CONFIG_TARGET_ROOTFS_EXT4FS is not set" >> "$config_file"
+        echo "# CONFIG_TARGET_ROOTFS_CPIOGZ is not set" >> "$config_file"
+        echo "CONFIG_TARGET_ROOTFS_PARTSIZE=1024" >> "$config_file"
+        
+        sed -i "s/Ouc3kNF6/${DATE}/g" files/etc/uci-defaults/99-init-settings.sh
+        sed -i '/# setup misc settings/ a\mv \/www\/luci-static\/resources\/view\/status\/include\/29_temp.js \/www\/luci-static\/resources\/view\/status\/include\/17_temp.js' files/etc/uci-defaults/99-init-settings.sh
+        
+        echo "Rootfs configuration updated successfully:"
+        echo "- Root partition size: 1024MB"
+        echo "- Format: tar.gz (generic)"
+        echo "- Other formats disabled: squashfs, ext4fs, cpiogz"
+    else
+        echo "Warning: .config file not found in $new_name"
+        return 1
+    fi
+    return 0
+}
+
+copy_rootfs() {
+    local version="$1"
+    local new_name="openwrt-${version}"
+    local rootfs_file="${new_name}/bin/targets/armsr/armv8/openwrt-${version}-armsr-armv8-generic-rootfs.tar.gz"
+    local ulo_rootfs="$(pwd)/./ULO-Builder/rootfs"
+    local rootfs_name="openwrt-${version}-armsr-armv8-generic-rootfs.tar.gz"
+
+    echo "Copying rootfs to ULO-Builder..."
+    echo "Source: $rootfs_file"
+    echo "Destination: $ulo_rootfs"
+    
+    if [ ! -f "$rootfs_file" ]; then
+        echo "Error: Rootfs file not found at $rootfs_file"
+        ls -l "${new_name}/bin/targets/armsr/armv8/"
+        return 1
+    fi
+
+    mkdir -p "$ulo_rootfs"
+
+    cp -v "$rootfs_file" "$ulo_rootfs/$rootfs_name" || {
+        echo "Error: Failed to copy rootfs"
+        echo "Current directory: $(pwd)"
+        return 1
+    }
+
+    if [ -f "$ulo_rootfs/$rootfs_name" ]; then
+        echo "Rootfs successfully copied to ULO-Builder"
+        ls -l "$ulo_rootfs"
+        
+        sed -i '/^ROOTFS=/d' "$CONFIG_FILE"
+        echo "ROOTFS=$rootfs_name" >> "$CONFIG_FILE"
+        echo "Rootfs name has been saved to config file"
+    else
+        echo "Error: File not found after copying"
+        return 1
+    fi
+    
+    return 0
+}
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: Config file not found"
+    exit 1
+fi
+
+version=$(grep "VERSION=" "$CONFIG_FILE" | cut -d'=' -f2)
+if [ -z "$version" ]; then
+    echo "Error: VERSION not found in config file"
+    exit 1
+fi
+
+echo "Using OpenWrt version $version"
+
+setup_image_builder "$version" && \
+update_rootfs_size "$version" && \
+build_image "$version" && \
+copy_rootfs "$version"
