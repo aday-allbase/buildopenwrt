@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Licensed under MIT License
+# See: https://opensource.org/license/mit
+#
+# Copyright (c) 2024 BobbyUnkown
+
+# Script to build firmware for ulo builder
+# BobbyUnkown https://github.com/bobbyunknown
+
+cd ULO-Builder || exit 1
+
+DEVICE=$(grep "DEVICE=" ../config | cut -d'=' -f2)
+KERNEL=$(grep "KERNEL=" ../config | cut -d'=' -f2)
+ROOTFS_SIZE=$(grep "ROOTFS_SIZE=" ../config | cut -d'=' -f2)
+ROOTFS=$(grep "ROOTFS=" ../config | cut -d'=' -f2)
+
+echo "Starting build with configuration:"
+echo "Device: $DEVICE"
+echo "Kernel: $KERNEL"
+echo "Rootfs: $ROOTFS"
+echo "Rootfs size: ${ROOTFS_SIZE}M"
+echo "-----------------------------"
+
+sudo ./ulo -m $DEVICE -r $ROOTFS -k $KERNEL -s $ROOTFS_SIZE
+
+if [ $? -eq 0 ]; then
+    echo "Build successful for $DEVICE with rootfs $ROOTFS and kernel $KERNEL"
+else
+    echo "Build failed for $DEVICE with rootfs $ROOTFS and kernel $KERNEL"
+fi
+
+echo "Build process completed"

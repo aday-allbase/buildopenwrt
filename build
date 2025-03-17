@@ -70,7 +70,7 @@ while true; do
                 
                 if [ $? -eq 0 ]; then
                     echo "Step 2: Building ULO Firmware..." | lolcat -a
-                    ./ulobuilder
+                    ./ulo-builders
                     if [ $? -eq 0 ]; then
                         echo "Firmware build process completed" | lolcat -a
                     else

@@ -15,7 +15,7 @@ CONFIG_PACKAGE="config-package"
 setup_image_builder() {
     local version="$1"
     local new_name="openwrt-${version}"
-    local image_builder_name="openwrt-imagebuilder-${version}-armsr-armv8.Linux-x86_64.tar.zst"
+    local image_builder_name="openwrt-imagebuilder-${version}-armsr-armv8.Linux-x86_64.tar.xz"
     local download_url="https://downloads.openwrt.org/releases/${version}/targets/armsr/armv8"
     
     if [ ! -d "$new_name" ]; then
@@ -109,10 +109,10 @@ update_rootfs_size() {
         echo "# CONFIG_TARGET_ROOTFS_SQUASHFS is not set" >> "$config_file"
         echo "# CONFIG_TARGET_ROOTFS_EXT4FS is not set" >> "$config_file"
         echo "# CONFIG_TARGET_ROOTFS_CPIOGZ is not set" >> "$config_file"
-        echo "CONFIG_TARGET_ROOTFS_PARTSIZE=1024" >> "$config_file"
+        echo "CONFIG_TARGET_ROOTFS_PARTSIZE=512" >> "$config_file"
         
         echo "Rootfs configuration updated successfully:"
-        echo "- Root partition size: 1024MB"
+        echo "- Root partition size: 512MB"
         echo "- Format: tar.gz (generic)"
         echo "- Other formats disabled: squashfs, ext4fs, cpiogz"
     else
